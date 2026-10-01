@@ -1,5 +1,7 @@
 # phonectl
 
+[![Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/bgg4YmAd3)
+
 Control your real Android phone from your computer — from the terminal, from a browser
 dashboard, or by letting an AI coding agent (Claude Code, Codex, Cursor…) drive it.
 
@@ -134,6 +136,10 @@ Run `phonectl doctor`. The usual answers:
   one on the main Wireless debugging screen. `phonectl pair <code>` finds the right one.
 - **Live view is a slideshow** — scrcpy wasn't found, so it fell back to screenshots. Install
   scrcpy (tested with 4.1) and check `phonectl doctor`.
+
+## Community
+
+💬 [Join the Discord](https://discord.gg/bgg4YmAd3) for questions, help, feedback, and updates.
 
 ## License
 
