@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phone Control</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='5' y='1.5' width='14' height='21' rx='3.5' fill='%2316150f'/><circle cx='12' cy='4.6' r='.9' fill='%23fff'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --paper: #fbfaf7; --card: #ffffff; --well: #f5f4f0; --well-2: #eeede8;
+    --ink: #16150f; --ink-2: #45433d; --ink-3: #6f6c64; --ink-4: #a09c93;
+    --hair: rgba(22, 21, 15, 0.09); --hair-2: rgba(22, 21, 15, 0.14);
+    --good: #2f9e5b; --bad: #b3261e; --warn: #a86a00; --focus: #2563eb;
+    --display: "Instrument Serif", "Times New Roman", serif;
+    --sans: "Geist", "Segoe UI", system-ui, sans-serif;
+    --mono: "Geist Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --lift-1: 0 1px 1px rgba(20,18,14,.04), 0 4px 10px -2px rgba(20,18,14,.06), 0 22px 40px -22px rgba(20,18,14,.2);
+    --lift-2: 0 2px 2px rgba(20,18,14,.04), 0 16px 32px -8px rgba(20,18,14,.12), 0 50px 90px -34px rgba(20,18,14,.35);
+    --ease: cubic-bezier(.2,.7,.2,1);
+    --tooth: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='4' stitchTiles='stitch' result='n'/%3E%3CfeDiffuseLighting in='n' lighting-color='%23fff' surfaceScale='1.7'%3E%3CfeDistantLight azimuth='225' elevation='62'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    position: relative; isolation: isolate; overflow: hidden;
+    background: radial-gradient(ellipse 70% 60% at 50% 38%, #fffdf9 0%, #f4f3ef 70%, #efeee9 100%);
+    color: var(--ink); font: 13.5px/1.45 var(--sans); -webkit-font-smoothing: antialiased;
+  }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: var(--tooth); mix-blend-mode: multiply; opacity: .16; }
+  svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  svg.i.sm { width: 14px; height: 14px; }
+
+  button {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px; white-space: nowrap;
+    font: 500 13px/1 var(--sans); color: var(--ink-2); background: var(--card); border: 0; border-radius: 999px;
+    height: 32px; padding: 0 13px; cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,.05), inset 0 0 0 1px var(--hair);
+    transition: transform .25s var(--ease), box-shadow .25s var(--ease), color .2s, background .2s;
+  }
+  button:hover { color: var(--ink); box-shadow: 0 6px 14px -8px rgba(0,0,0,.25), inset 0 0 0 1px var(--hair-2); transform: translateY(-1px); }
+  button:active { transform: translateY(0); }
+  button:focus-visible, input:focus-visible, .screen:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  button:disabled { opacity: .45; cursor: default; transform: none; }
+  button.primary { color: #fff; background: linear-gradient(#2c2a26, #0f0e0c); box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 8px 18px -10px rgba(0,0,0,.6); }
+  button.primary:hover { color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 12px 22px -10px rgba(0,0,0,.65); }
+  button.ghost { background: transparent; box-shadow: none; color: var(--ink-3); }
+  button.ghost:hover { background: var(--well); color: var(--ink); box-shadow: none; transform: none; }
+  button.icon { width: 32px; padding: 0; }
+  input {
+    font: 13.5px var(--sans); color: var(--ink); background: var(--well); border: 0; border-radius: 12px;
+    height: 36px; padding: 0 12px; outline: none; width: 100%;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.05), inset 0 0 0 1px var(--hair); transition: box-shadow .2s, background .2s;
+  }
+  input::placeholder { color: var(--ink-4); }
+  input:focus { background: #fff; box-shadow: inset 0 0 0 1px var(--ink-3), 0 0 0 4px rgba(22,21,15,.06); }
+  .search { position: relative; }
+  .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-4); pointer-events: none; }
+  .search input { padding-left: 34px; }
+  .eyebrow { font: 500 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+
+  .app { display: grid; grid-template-rows: 64px 1fr; height: 100vh; }
+
+  /* ── top bar ─────────────────────────── */
+  header { display: flex; align-items: center; gap: 18px; padding: 0 20px; }
+  .brand { display: flex; align-items: center; gap: 11px; font: 400 27px/1 var(--display); letter-spacing: -.01em; }
+  .mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: #fff; background: linear-gradient(160deg, #3a3833, #111); box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 6px 14px -6px rgba(0,0,0,.5); }
+  .dev { display: flex; gap: 6px; align-items: center; white-space: nowrap; overflow: hidden; min-width: 0; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: 999px; background: rgba(255,255,255,.8); font-size: 12.5px; font-weight: 500; color: var(--ink-2); box-shadow: 0 1px 2px rgba(0,0,0,.05), inset 0 0 0 1px rgba(0,0,0,.05); }
+  .pill svg { color: var(--ink-3); }
+  .pill b { color: var(--ink); font-weight: 600; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 0 3px rgba(179,38,30,.15); flex: none; }
+  .dot.on { background: #3fb96b; box-shadow: 0 0 0 3px rgba(63,185,107,.18); }
+  .dot.wait { background: #d99a1e; box-shadow: 0 0 0 3px rgba(217,154,30,.18); animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .35 } }
+  .spacer { flex: 1; }
+  .hdr-actions { display: flex; gap: 8px; }
+  .hdr-actions button { height: 36px; padding: 0 16px; }
+
+  main { display: grid; grid-template-columns: 320px 1fr 372px; gap: 16px; padding: 0 16px 16px; min-height: 0; }
+  .panel { background: rgba(255,255,255,.92); border-radius: 22px; min-height: 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--lift-1), inset 0 1px 0 #fff, inset 0 0 0 1px rgba(0,0,0,.05); }
+
+  /* segmented tabs */
+  .seg { display: flex; gap: 2px; background: var(--well); border-radius: 12px; padding: 3px; box-shadow: inset 0 0 0 1px var(--hair); }
+  .seg button { flex: 1; height: 30px; border-radius: 9px; background: transparent; box-shadow: none; color: var(--ink-3); padding: 0 6px; }
+  .seg button:hover { transform: none; box-shadow: none; color: var(--ink); }
+  .seg button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08), inset 0 0 0 1px rgba(0,0,0,.05); }
+  .side-tabs, .tabs { padding: 12px 12px 0; }
+
+  .apps-head { padding: 12px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--hair); }
+  .count-row { display: flex; justify-content: space-between; align-items: center; }
+  .count-row button { height: 26px; padding: 0 9px; font-size: 12px; }
+  .list { overflow-y: auto; flex: 1; padding: 10px; }
+  .list::-webkit-scrollbar, .scroll::-webkit-scrollbar, .tools::-webkit-scrollbar { width: 10px; }
+  .list::-webkit-scrollbar-thumb, .scroll::-webkit-scrollbar-thumb, .tools::-webkit-scrollbar-thumb { background: rgba(0,0,0,.12); border-radius: 10px; border: 3px solid transparent; background-clip: padding-box; }
+  .group-title { padding: 12px 6px 6px; }
+  .appi { display: flex; align-items: center; gap: 11px; padding: 7px 8px; border-radius: 13px; cursor: pointer; transition: background .15s; }
+  .appi:hover { background: var(--well); }
+  .appi.fg { background: var(--well); box-shadow: inset 0 0 0 1px var(--hair-2); }
+  .ico { position: relative; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font: 400 19px/1 var(--display); color: #fff; flex: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 6px 14px -7px rgba(0,0,0,.45); }
+  .ico img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; }
+  .ico.has { background: transparent !important; box-shadow: none; }
+  .ico.has img { opacity: 1; filter: drop-shadow(0 4px 6px rgba(0,0,0,.18)); }
+  .ico.has span { visibility: hidden; }
+  .pico { width: 15px; height: 15px; object-fit: contain; }
+  .appi .meta { min-width: 0; flex: 1; }
+  .nm { font-weight: 600; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .appi .pk, .proj .sub { color: var(--ink-3); font: 11px var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .appi .acts { display: none; gap: 2px; }
+  .appi:hover .acts { display: flex; }
+  .acts button { width: 28px; height: 28px; padding: 0; }
+  .star { color: #c98a00; }
+
+  /* projects */
+  .proj { background: #fff; border-radius: 16px; padding: 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 10px 22px -18px rgba(0,0,0,.35), inset 0 0 0 1px var(--hair); transition: box-shadow .3s var(--ease), transform .3s var(--ease); }
+  .proj:hover { transform: translateY(-2px); box-shadow: 0 2px 3px rgba(0,0,0,.04), 0 18px 32px -18px rgba(0,0,0,.4), inset 0 0 0 1px var(--hair-2); }
+  .proj.fg { box-shadow: 0 10px 22px -18px rgba(0,0,0,.35), inset 0 0 0 1.5px var(--ink); }
+  .proj-top { display: flex; gap: 11px; align-items: center; }
+  .proj .nm { font-size: 14.5px; }
+  .chips { display: flex; gap: 5px; flex-wrap: wrap; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 9px; border-radius: 999px; background: var(--well); color: var(--ink-3); font: 500 11px var(--sans); }
+  .chip.type { color: var(--ink); background: var(--well-2); font-family: var(--mono); letter-spacing: .02em; }
+  .chip.ok { color: var(--good); background: rgba(47,158,91,.1); }
+  .chip.ok::before, .chip.run::before, .chip.bad::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .chip.run { color: var(--warn); background: rgba(217,154,30,.12); }
+  .chip.run::before { animation: pulse 1s infinite; }
+  .chip.bad { color: var(--bad); background: rgba(179,38,30,.08); }
+  .proj-acts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .proj-acts button { height: 30px; padding: 0 12px; font-size: 12.5px; }
+  .mini { display: flex; gap: 0; flex: none; }
+  .mini button { width: 28px; height: 28px; padding: 0; }
+  .proj-tail { font: 10.5px/1.5 var(--mono); color: var(--ink-2); background: var(--well); border-radius: 10px; padding: 8px 10px; max-height: 96px; overflow: hidden; white-space: pre-wrap; word-break: break-all; }
+
+  /* ── stage ───────────────────────────── */
+  .stage { position: relative; display: flex; flex-direction: column; align-items: center; min-height: 0; padding: 4px 0 0; gap: 16px; }
+  .toolbar { display: flex; gap: 2px; align-items: center; padding: 5px; border-radius: 999px; background: rgba(255,255,255,.85); backdrop-filter: blur(10px); box-shadow: var(--lift-1), inset 0 1px 0 #fff, inset 0 0 0 1px rgba(0,0,0,.05); flex-wrap: wrap; justify-content: center; max-width: 100%; }
+  .toolbar button { background: transparent; box-shadow: none; height: 34px; padding: 0 12px; color: var(--ink-2); }
+  .toolbar button.icon { width: 34px; padding: 0; }
+  .toolbar button:hover { background: var(--well); transform: none; box-shadow: none; }
+  .toolbar .sep { width: 1px; height: 18px; background: var(--hair-2); margin: 0 4px; }
+  .phone-wrap { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; width: 100%; position: relative; }
+  .phone-wrap::after { content: ""; position: absolute; bottom: 0; left: 50%; width: 42%; height: 26px; transform: translateX(-50%); background: radial-gradient(ellipse at center, rgba(20,18,14,.28), transparent 70%); filter: blur(6px); z-index: -1; }
+  .phone {
+    position: relative; height: calc(100% - 18px); aspect-ratio: 9 / 19.5; border-radius: 46px; padding: 11px;
+    background: linear-gradient(145deg, #3b3a37 0%, #1b1a18 30%, #0d0d0c 60%, #2a2927 100%);
+    box-shadow: var(--lift-2), inset 0 0 0 1.5px #56544f, inset 0 0 0 3px #0a0a09, inset 0 2px 1px rgba(255,255,255,.18);
+  }
+  .phone::before, .phone::after { content: ""; position: absolute; right: -3px; width: 3px; border-radius: 0 3px 3px 0; background: linear-gradient(90deg, #1a1918, #4a4844); }
+  .phone::before { top: 21%; height: 9%; }
+  .phone::after { top: 33%; height: 5%; }
+  .screen { position: relative; width: 100%; height: 100%; border-radius: 36px; overflow: hidden; background: #000; cursor: crosshair; outline: none; touch-action: none; }
+  .screen:focus { box-shadow: 0 0 0 2px rgba(255,255,255,.35) inset; }
+  .cam { position: absolute; top: 12px; left: 50%; width: 11px; height: 11px; margin-left: -5.5px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #2a3140, #050608 70%); z-index: 3; pointer-events: none; box-shadow: 0 0 0 1.5px #000; }
+  .screen img, .screen canvas { width: 100%; height: 100%; object-fit: contain; display: block; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+  .overlay { position: absolute; inset: 0; pointer-events: none; }
+  .hl { position: absolute; border: 2px solid #fff; background: rgba(255,255,255,.18); border-radius: 6px; box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 0 0 9999px rgba(0,0,0,.35); }
+  .ripple { position: absolute; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 12px rgba(255,255,255,.6); animation: rip .5s ease-out forwards; }
+  @keyframes rip { from { transform: scale(.4); opacity: 1 } to { transform: scale(1.6); opacity: 0 } }
+  .empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: left; padding: 26px 22px; color: rgba(255,255,255,.7);
+    background: radial-gradient(120% 60% at 20% 0%, #3a3548 0%, transparent 60%), radial-gradient(90% 50% at 100% 100%, #273a4a 0%, transparent 60%), #0c0c10; }
+  .connect-card { width: 100%; max-width: 330px; display: flex; flex-direction: column; gap: 14px; pointer-events: auto; }
+  .connect-card .eyebrow { color: rgba(255,255,255,.5); }
+  .connect-card h3 { margin: 0; font: 400 clamp(30px, 3.2vw, 40px)/1 var(--display); letter-spacing: -.015em; color: #fff; }
+  .connect-card ol { margin: 0; padding: 0; list-style: none; counter-reset: s; display: flex; flex-direction: column; gap: 10px; font-size: 13px; line-height: 1.45; }
+  .connect-card li { counter-increment: s; display: flex; gap: 10px; }
+  .connect-card li::before { content: counter(s); flex: none; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 500 11px var(--mono); color: #fff; background: rgba(255,255,255,.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); }
+  .connect-card b { color: #fff; font-weight: 600; }
+  .connect-card button.primary { height: 42px; color: var(--ink); background: linear-gradient(#fff, #e9e7e1); box-shadow: inset 0 1px 0 #fff, 0 10px 24px -10px rgba(0,0,0,.8); }
+  .connect-card .row input { background: rgba(255,255,255,.08); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); font-family: var(--mono); letter-spacing: .18em; }
+  .connect-card .row input::placeholder { letter-spacing: normal; font-family: var(--sans); color: rgba(255,255,255,.4); }
+  .connect-card .row button { background: rgba(255,255,255,.1); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); height: 36px; }
+  .connect-card .hint { font-size: 11.5px; color: rgba(255,255,255,.45); display: flex; gap: 7px; align-items: center; }
+  .paused { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+  .paused h3 { margin: 0; font: 400 32px/1 var(--display); color: #fff; }
+  .stats { display: flex; gap: 14px; align-items: center; color: var(--ink-3); font: 11.5px var(--mono); padding-bottom: 2px; }
+  .stats #fps { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
+  .kbd { color: var(--ink-4); }
+  .toolbar button.on { background: var(--ink); color: #fff; }
+  .toolbar button.rec-on { background: #d6402f; color: #fff; width: auto; padding: 0 12px; }
+  .toolbar button.icon:not(.rec-on) .lbl { display: none; }
+  .toolbar button.rec-on .i { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .35 } }
+  .badge { display: inline-grid; place-items: center; min-width: 16px; height: 16px; padding: 0 4px; margin-left: 5px; border-radius: 99px; background: #d6402f; color: #fff; font: 600 10px/1 var(--sans); }
+  .toast { cursor: default; }
+  .toast.link { cursor: pointer; pointer-events: auto; z-index: 50; }
+  .phone-wrap.dropping .screen { box-shadow: 0 0 0 3px #fff inset, 0 0 0 9999px rgba(0,0,0,.25) inset; }
+
+  /* ── side ────────────────────────────── */
+  .pane { display: none; flex: 1; min-height: 0; flex-direction: column; }
+  .pane.on { display: flex; }
+  .pane-head { padding: 12px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid var(--hair); }
+  .pane-head > button { height: 36px; flex: none; }
+  .scroll { overflow-y: auto; flex: 1; padding: 10px; }
+  .muted { color: var(--ink-3); padding: 8px; line-height: 1.5; }
+  .node { padding: 8px 10px; border-radius: 11px; cursor: pointer; display: flex; gap: 8px; align-items: center; }
+  .node:hover { background: var(--well); }
+  .node .lbl { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+  .node .cls { color: var(--ink-4); font: 10.5px var(--mono); }
+  .tag { font: 500 10px var(--mono); padding: 2px 7px; border-radius: 999px; background: var(--ink); color: #fff; }
+  .tag.s { background: var(--well-2); color: var(--ink-2); }
+  pre.log { margin: 0; font: 11px/1.55 var(--mono); white-space: pre-wrap; word-break: break-all; color: var(--ink-2); }
+  .E { color: var(--bad); } .W { color: var(--warn); }
+  .tools { padding: 12px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+  .card { background: #fff; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.04), inset 0 0 0 1px var(--hair); }
+  .card h4 { margin: 0; display: flex; align-items: center; gap: 8px; font: 500 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+  .card p { margin: 0; color: var(--ink-3); line-height: 1.5; }
+  .row { display: flex; gap: 8px; }
+  .row button { height: 36px; flex: none; }
+  .drop { border: 1.5px dashed var(--hair-2); border-radius: 14px; padding: 20px; text-align: center; color: var(--ink-3); display: flex; flex-direction: column; align-items: center; gap: 8px; background: var(--well); transition: border-color .2s, background .2s; }
+  .drop u { color: var(--ink); cursor: pointer; }
+  .drop.over { border-color: var(--ink); background: #fff; color: var(--ink); }
+  .act { padding: 10px 6px; border-bottom: 1px solid var(--hair); display: flex; gap: 10px; align-items: baseline; }
+  .act:last-child { border-bottom: 0; }
+  .act .src { font: 500 10px var(--mono); padding: 2px 7px; border-radius: 999px; background: var(--well-2); color: var(--ink-2); flex: none; }
+  .act .src.dashboard { background: var(--ink); color: #fff; }
+  .act time { color: var(--ink-4); font: 11px var(--mono); margin-left: auto; white-space: nowrap; }
+  code { font: 11.5px var(--mono); background: var(--well); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
+
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translate(-50%, 8px); display: flex; align-items: center; gap: 8px; background: linear-gradient(#2c2a26, #0f0e0c); color: #fff; padding: 11px 16px; border-radius: 999px; font-weight: 500; box-shadow: 0 20px 40px -14px rgba(0,0,0,.55); opacity: 0; transition: opacity .2s, transform .3s var(--ease); pointer-events: none; z-index: 10; max-width: min(640px, 90vw); }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast.err { background: linear-gradient(#c0392b, #8e1f16); }
+  .menu { position: fixed; background: #fff; border-radius: 14px; padding: 5px; box-shadow: var(--lift-2), inset 0 0 0 1px var(--hair); z-index: 20; min-width: 190px; }
+  .menu button { display: flex; justify-content: flex-start; width: 100%; background: transparent; box-shadow: none; border-radius: 9px; height: 32px; padding: 0 10px; }
+  .menu button:hover { background: var(--well); transform: none; box-shadow: none; }
+  .menu button.danger { color: var(--bad); }
+  .spane { display: none; flex: 1; min-height: 0; flex-direction: column; }
+  .spane.on { display: flex; }
+  @media (max-width: 1250px) { main { grid-template-columns: 270px 1fr 320px; } .kbd { display: none; } .toolbar .lbl { display: none; } }
+  @media (max-width: 980px) { .dev .pill:not(:first-child) { display: none; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/></symbol>
+    <symbol id="i-recents" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="3"/><path d="M9 3h10a2 2 0 0 1 2 2v10" opacity=".5"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+    <symbol id="i-voldown" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5"/></symbol>
+    <symbol id="i-volup" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5M18.5 6.5a8 8 0 0 1 0 11"/></symbol>
+    <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.8 0"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2.5"/><path d="M8 21h8M12 17v4"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></symbol>
+    <symbol id="i-starf" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+    <symbol id="i-logs" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-hammer" viewBox="0 0 24 24"><path d="M15 12l-8.5 8.5a2.1 2.1 0 0 1-3-3L12 9"/><path d="M17.6 15L22 10.6M20.9 11.7L12.3 3.1a1 1 0 0 0-1.4 0L9 5l6 6 1.9-1.9"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2 8.8a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r=".6" fill="currentColor"/></symbol>
+    <symbol id="i-usb" viewBox="0 0 24 24"><path d="M12 2v16M8 6l4-4 4 4M7 11v2a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><circle cx="12" cy="20" r="2"/></symbol>
+    <symbol id="i-battery" viewBox="0 0 24 24"><rect x="2" y="7" width="17" height="10" rx="2.5"/><path d="M22 11v2"/></symbol>
+    <symbol id="i-charging" viewBox="0 0 24 24"><rect x="2" y="7" width="17" height="10" rx="2.5"/><path d="M22 11v2M11 9l-2 3h3l-2 3"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></symbol>
+    <symbol id="i-type" viewBox="0 0 24 24"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></symbol>
+    <symbol id="i-package" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></symbol>
+    <symbol id="i-tunnel" viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/><path d="M4 5v14" opacity=".5"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3L20 3M16 7l3 3M18 5l2 2"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><path d="M4 17l6-5-6-5M12 19h8"/></symbol>
+    <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-12 0zM12 17v5"/></symbol>
+    <symbol id="i-rec" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor"/></symbol>
+    <symbol id="i-clip" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+    <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"/></symbol>
+  </defs>
+</svg>
+<div class="app">
+  <header>
+    <div class="brand"><span class="mark"><svg class="i"><use href="#i-phone"/></svg></span>Phone Control</div>
+    <div class="dev" id="dev"><span class="pill"><span class="dot wait" id="dot"></span>Looking for your phone…</span></div>
+    <div class="spacer"></div>
+    <div class="hdr-actions">
+      <button id="btnConnect" title="Reconnect over wifi"><svg class="i"><use href="#i-plug"/></svg><span>Connect</span></button>
+    </div>
+  </header>
+
+  <main>
+    <aside class="panel">
+      <div class="side-tabs"><div class="seg" id="sideTabs">
+        <button data-s="projects" class="on">My projects</button>
+        <button data-s="apps">Phone apps</button>
+      </div></div>
+      <div class="spane on" id="s-projects">
+        <div class="apps-head">
+          <div class="search"><svg class="i sm"><use href="#i-search"/></svg><input id="projSearch" placeholder="Search projects"></div>
+          <div class="count-row"><span class="eyebrow" id="projCount">Scanning your PC…</span><button class="ghost" id="projRescan"><svg class="i sm"><use href="#i-refresh"/></svg>Rescan</button></div>
+        </div>
+        <div class="list" id="projList"></div>
+      </div>
+      <div class="spane" id="s-apps">
+        <div class="apps-head">
+          <div class="search"><svg class="i sm"><use href="#i-search"/></svg><input id="appSearch" placeholder="Search apps · Enter opens first"></div>
+          <div class="seg" id="appFilter">
+            <button data-f="mine" class="on">My apps</button>
+            <button data-f="all">All</button>
+          </div>
+        </div>
+        <div class="list" id="appList"></div>
+      </div>
+    </aside>
+
+    <div class="stage">
+      <div class="toolbar">
+        <button data-key="back" title="Back (Esc / right-click)"><svg class="i"><use href="#i-back"/></svg><span class="lbl">Back</span></button>
+        <button data-key="home" title="Home"><svg class="i"><use href="#i-home"/></svg><span class="lbl">Home</span></button>
+        <button data-key="recents" title="Recent apps"><svg class="i"><use href="#i-recents"/></svg><span class="lbl">Recents</span></button>
+        <span class="sep"></span>
+        <button class="icon" data-act="notifications" title="Pull down notifications"><svg class="i"><use href="#i-bell"/></svg></button>
+        <button class="icon" data-act="quicksettings" title="Quick settings"><svg class="i"><use href="#i-sliders"/></svg></button>
+        <button class="icon" data-key="voldown" title="Volume down"><svg class="i"><use href="#i-voldown"/></svg></button>
+        <button class="icon" data-key="volup" title="Volume up"><svg class="i"><use href="#i-volup"/></svg></button>
+        <button class="icon" data-act="rotate" title="Rotate"><svg class="i"><use href="#i-rotate"/></svg></button>
+        <span class="sep"></span>
+        <button data-act="wake" title="Wake + unlock"><svg class="i"><use href="#i-sun"/></svg><span class="lbl">Wake</span></button>
+        <button class="icon" data-key="power" title="Power (screen off)"><svg class="i"><use href="#i-power"/></svg></button>
+        <button class="icon" data-act="shot" title="Save screenshot"><svg class="i"><use href="#i-camera"/></svg></button>
+        <button class="icon" id="btnCopyShot" title="Copy the screen to the PC clipboard"><svg class="i"><use href="#i-clip"/></svg></button>
+        <button class="icon" id="btnRec" title="Record the screen to an mp4 (up to 3 min)"><svg class="i"><use href="#i-rec"/></svg><span class="lbl">Record</span></button>
+        <button class="icon" id="btnAwake" title="Keep the screen on while testing"><svg class="i"><use href="#i-eye"/></svg></button>
+        <button id="btnLive" title="Pause/resume live view"><svg class="i"><use href="#i-pause"/></svg><span class="lbl">Pause</span></button>
+      </div>
+      <div class="phone-wrap">
+        <div class="phone" id="phone">
+          <div class="screen" id="screen" tabindex="0">
+            <span class="cam"></span>
+            <canvas id="video" style="display:none"></canvas>
+            <img id="frame" alt="">
+            <div class="overlay" id="overlay"></div>
+            <div class="empty" id="empty"></div>
+          </div>
+        </div>
+      </div>
+      <div class="stats"><span id="fps">—</span><span class="kbd">click tap · drag swipe · ctrl-drag pinch · right-click back · ctrl+c/v clipboard · drop files</span></div>
+    </div>
+
+    <section class="panel side">
+      <div class="tabs"><div class="seg" id="tabs">
+        <button data-t="inspect" class="on">Inspect</button>
+        <button data-t="logs">Logs</button>
+        <button data-t="activity">Activity</button>
+        <button data-t="tools">Tools</button>
+      </div></div>
+
+      <div class="pane on" id="p-inspect">
+        <div class="pane-head">
+          <button id="btnInspect" class="primary"><svg class="i sm"><use href="#i-scan"/></svg><span>Read screen</span></button>
+          <div class="search" style="flex:1"><svg class="i sm"><use href="#i-search"/></svg><input id="nodeFilter" placeholder="Filter elements"></div>
+        </div>
+        <div class="scroll" id="nodes"><div class="muted">Reads every button and label on screen. Hover to highlight, click to tap it.</div></div>
+      </div>
+
+      <div class="pane" id="p-logs">
+        <div class="pane-head">
+          <button id="btnLogs" class="primary icon" title="Refresh"><svg class="i sm"><use href="#i-refresh"/></svg></button>
+          <div class="seg" id="logMode" style="flex:1">
+            <button data-m="app" class="on">Current app</button>
+            <button data-m="all">All</button>
+            <button data-m="crash">Crashes</button>
+          </div>
+          <button id="btnFollow" class="icon" title="Follow: refresh every 2s"><svg class="i sm"><use href="#i-play"/></svg></button>
+        </div>
+        <div class="scroll"><pre class="log" id="logs">Warnings and errors only.</pre></div>
+      </div>
+
+      <div class="pane" id="p-activity">
+        <div class="pane-head"><span class="eyebrow">You + your agents, on the phone</span></div>
+        <div class="scroll" id="activity"></div>
+      </div>
+
+      <div class="pane" id="p-tools">
+        <div class="tools">
+          <div class="card">
+            <h4><svg class="i sm"><use href="#i-type"/></svg>Type text</h4>
+            <div class="row"><input id="txt" placeholder="Sends to the focused field"><button id="btnTxt">Send</button></div>
+          </div>
+          <div class="card">
+            <h4><svg class="i sm"><use href="#i-link"/></svg>Open link / deep link</h4>
+            <div class="row"><input id="url" placeholder="https://… or exp://…"><button id="btnUrl">Open</button></div>
+          </div>
+          <div class="card">
+            <h4><svg class="i sm"><use href="#i-package"/></svg>Install APK / send file</h4>
+            <div class="drop" id="drop"><svg class="i"><use href="#i-download"/></svg><span>Drop an .apk to install, any other file to send to the phone's Downloads, or <u id="pick">choose file</u></span></div>
+            <input type="file" id="apk" hidden>
+          </div>
+          <div class="card">
+            <h4><svg class="i sm"><use href="#i-tunnel"/></svg>Dev server tunnel</h4>
+            <div class="row"><input id="port" value="8081" style="width:90px;font-family:var(--mono)"><button id="btnRev" style="flex:1">Phone localhost → PC</button></div>
+          </div>
+          <div class="card">
+            <h4><svg class="i sm"><use href="#i-key"/></svg>Pair a new PC / phone</h4>
+            <p>Phone: Developer options › Wireless debugging › “Pair device with pairing code”. Keep that dialog open.</p>
+            <div class="row"><input id="code" placeholder="6-digit code" maxlength="6" inputmode="numeric" style="font-family:var(--mono)"><button id="btnPair">Pair</button></div>
+          </div>
+          <div class="card">
+            <h4><svg class="i sm"><use href="#i-image"/></svg>Screenshots</h4>
+            <div class="row"><button data-act="shot" style="flex:1"><svg class="i sm"><use href="#i-camera"/></svg>Save shot</button><button data-act="openshots" style="flex:1"><svg class="i sm"><use href="#i-folder"/></svg>Open folder</button></div>
+          </div>
+          <div class="card">
+            <h4><svg class="i sm"><use href="#i-terminal"/></svg>For agents</h4>
+            <p>CLI: <code>phonectl status</code> <code>shot</code> <code>ui</code> <code>tap "Label"</code>. HTTP: <code>POST /api/&lt;action&gt;</code> on this port. Their actions show in Activity.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const S = { status: null, apps: [], recents: [], favorites: [], filter: 'mine', live: true, nodes: [], logMode: 'app' };
+const ic = (n, cls = 'i sm') => `<svg class="${cls}"><use href="#i-${n}"/></svg>`;
+
+function toast(msg, err) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'toast show' + (err ? ' err' : ''); t.onclick = null; clearTimeout(toastLink.h);
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.className = 'toast' + (err ? ' err' : ''), err ? 5000 : 2600);
+}
+async function api(action, body, method = 'POST') {
+  try {
+    const r = await fetch('/api/' + action + (method === 'GET' && body ? '?' + new URLSearchParams(body) : ''), method === 'POST' ? { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) } : {});
+    return await r.json();
+  } catch (e) { return { ok: false, error: 'Dashboard server not reachable — run `phonectl dash`' }; }
+}
+async function run(action, body, okMsg) {
+  const r = await api(action, body);
+  if (!r.ok) toast(r.error || 'Failed', true); else if (r.message || okMsg) toast(r.message || okMsg);
+  return r;
+}
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ------------------------------------------------ status
+async function refreshStatus() {
+  const s = await api('status', null, 'GET');
+  const was = S.status?.ok;
+  S.status = s;
+  if (s.ok) {
+    const bat = s.battery != null ? `<span class="pill">${ic(s.charging ? 'charging' : 'battery')}${s.battery}%</span>` : '';
+    $('#dev').innerHTML = `<span class="pill"><span class="dot on"></span><b>${esc(s.model)}</b></span><span class="pill">Android ${esc(s.android)}</span><span class="pill">${ic(s.transport === 'wifi' ? 'wifi' : 'usb')}${s.transport === 'wifi' ? 'Wi-Fi' : 'USB'}</span>${bat}${s.awake ? '' : `<span class="pill">${ic('moon')}Screen off</span>`}<span class="pill">${s.foreground ? `<img class="pico" src="/icon/${encodeURIComponent(s.foreground)}" alt="" onerror="this.outerHTML=ic('play')">` : ic('play')}${esc(nameOf(s.foreground))}</span>`;
+    $('#btnConnect span').textContent = 'Reconnect';
+  } else {
+    const unauth = (s.devices || []).find((d) => d.state === 'unauthorized');
+    const msg = s.error ? 'Dashboard offline' : unauth ? 'Unauthorized — tap Allow on the phone' : s.autoconnect ? 'Waiting for phone · auto-connecting' : 'No phone connected';
+    $('#dev').innerHTML = `<span class="pill"><span class="dot ${s.autoconnect && !s.error ? 'wait' : ''}"></span>${esc(msg)}</span>`;
+    $('#btnConnect span').textContent = 'Connect';
+  }
+  if (s.ok !== was) { loadApps(); loadProjects(); if (s.ok) streamFails = 0; }
+  extrasFromStatus(s);
+  renderEmpty();
+  highlightForeground();
+}
+function renderEmpty() {
+  const s = S.status, e = $('#empty');
+  if (s && s.ok) {
+    const paused = !S.live && !viewMode;
+    e.style.display = paused ? 'grid' : 'none';
+    if (paused) e.innerHTML = `<div class="paused">${ic('pause', 'i')}<h3>Paused</h3></div>`;
+    e.dataset.mode = 'on';
+    return;
+  }
+  e.style.display = 'grid';
+  if (e.dataset.mode === 'off') return; // keep what the user typed into the pairing field
+  e.dataset.mode = 'off';
+  $('#frame').removeAttribute('src'); showView(null);
+  e.innerHTML = `<div class="connect-card">
+    <span class="eyebrow">Android · Wireless debugging</span>
+    <h3>Phone not connected</h3>
+    <ol><li><span>On the phone: <b>Settings › Developer options › Wireless debugging</b> → on, same Wi-Fi as this computer.</span></li>
+    <li><span>It connects on its own within a few seconds. Or press <b>Connect</b>.</span></li>
+    <li><span>First time on this computer? Tap <b>Pair device with pairing code</b>, then enter the code below.</span></li></ol>
+    <button class="primary" onclick="doConnect()">${ic('plug')}Connect</button>
+    <div class="row"><input id="code2" placeholder="6-digit pairing code" maxlength="6" inputmode="numeric" onkeydown="if(event.key==='Enter')doPair(this.value)"><button onclick="doPair($('#code2').value)">Pair</button></div>
+    <div class="hint">${ic('wifi')}Auto-connect is watching for the phone</div>
+  </div>`;
+}
+async function doConnect() { toast('Looking for the phone…'); await run('connect'); refreshStatus(); }
+async function doPair(code) { toast('Pairing…'); const r = await run('pair', { code: (code || '').trim() }); if (r.ok) $('#empty').dataset.mode = ''; refreshStatus(); }
+$('#btnConnect').onclick = doConnect;
+$('#btnPair').onclick = () => doPair($('#code').value);
+
+// ------------------------------------------------ live view
+// Main path: scrcpy's server on the phone streams H.264 to /stream; WebCodecs decodes it
+// into the canvas (up to 60fps). Fallback: /frame.png screencaps when the stream can't run.
+const canvas = $('#video'), ctx2d = canvas.getContext('2d');
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let frames = 0, loopBusy = false, viewMode = null, streamFails = 0, lastStreamTry = 0, streamAbort = null, lastMs = 0;
+function showView(mode) {
+  viewMode = mode;
+  canvas.style.display = mode === 'video' ? 'block' : 'none';
+  $('#frame').style.display = mode === 'video' ? 'none' : 'block';
+}
+setInterval(() => {
+  if (!S.live) return;
+  if (!S.status?.ok) { $('#fps').textContent = '—'; frames = 0; return; }
+  const src = viewMode === 'video' ? 'scrcpy' : viewMode === 'png' ? `screencap · ${Math.round(lastMs)} ms` : 'starting…';
+  const rate = viewMode === 'video' && frames === 0 ? 'idle' : `${frames} fps`;
+  $('#fps').innerHTML = `<span class="dot ${viewMode ? 'on' : 'wait'}"></span>live · ${rate} · ${src}`;
+  frames = 0;
+}, 1000);
+
+const concat = (a, b) => { const o = new Uint8Array(a.length + b.length); o.set(a); o.set(b, a.length); return o; };
+function codecOf(cfg) {
+  // SPS NAL (type 7) → avc1.<profile><constraints><level>
+  for (let i = 0; i + 7 < cfg.length; i++) {
+    if (cfg[i] === 0 && cfg[i + 1] === 0 && cfg[i + 2] === 1 && (cfg[i + 3] & 0x1f) === 7) {
+      return 'avc1.' + [cfg[i + 4], cfg[i + 5], cfg[i + 6]].map((b) => b.toString(16).padStart(2, '0')).join('');
+    }
+  }
+  return null;
+}
+async function playStream() {
+  if (!('VideoDecoder' in window)) throw new Error('this browser has no WebCodecs');
+  const ac = new AbortController(); streamAbort = ac;
+  const r = await fetch('/stream', { signal: ac.signal });
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'stream unavailable');
+  let decoder = null, cfg = null, codec = null, needKey = true, got = false, ts = 0;
+  const setup = () => {
+    try { decoder?.close(); } catch {}
+    decoder = new VideoDecoder({
+      output: (f) => {
+        if (canvas.width !== f.displayWidth || canvas.height !== f.displayHeight) { canvas.width = f.displayWidth; canvas.height = f.displayHeight; }
+        ctx2d.drawImage(f, 0, 0); f.close(); frames++;
+        if (!got) { got = true; streamFails = 0; showView('video'); refreshStatus(); }
+      },
+      error: (e) => { console.warn('decoder', e); if (!ac.signal.aborted) setTimeout(setup, 0); },
+    });
+    decoder.configure({ codec, optimizeForLatency: true });
+    needKey = true;
+  };
+  const handle = (flags, data) => {
+    if (flags & 1) { cfg = data.slice(); codec = codecOf(cfg); if (codec) setup(); if (!(flags & 2)) return; }
+    if (!decoder || decoder.state !== 'configured') return;
+    const key = Boolean(flags & 2);
+    if (needKey && !key) return;
+    needKey = false;
+    // Annex-B decoding wants SPS/PPS in-band with every key frame.
+    decoder.decode(new EncodedVideoChunk({ type: key ? 'key' : 'delta', timestamp: (ts++) * 16666, data: key && cfg ? concat(cfg, data) : data.slice() }));
+  };
+  const reader = r.body.getReader();
+  let buf = new Uint8Array(0);
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf = buf.length ? concat(buf, value) : value;
+      let off = 0;
+      while (buf.length - off >= 5) {
+        const len = ((buf[off + 1] << 24) | (buf[off + 2] << 16) | (buf[off + 3] << 8) | buf[off + 4]) >>> 0;
+        if (buf.length - off - 5 < len) break;
+        handle(buf[off], buf.subarray(off + 5, off + 5 + len));
+        off += 5 + len;
+      }
+      buf = off ? buf.slice(off) : buf;
+    }
+  } finally { try { decoder?.close(); } catch {} }
+  if (!got) throw new Error('stream ended before the first frame');
+}
+function stopStream() { streamAbort?.abort(); streamAbort = null; }
+document.addEventListener('visibilitychange', () => { if (document.hidden) stopStream(); });
+
+async function pngFrame() {
+  const t0 = performance.now();
+  const r = await fetch('/frame.png?t=' + Date.now());
+  if (!r.ok) return sleep(800);
+  const url = URL.createObjectURL(await r.blob());
+  const img = $('#frame');
+  await new Promise((res) => { img.onload = res; img.onerror = res; img.src = url; });
+  if (img._prev) URL.revokeObjectURL(img._prev); img._prev = url;
+  if (viewMode !== 'png') showView('png');
+  frames++; lastMs = performance.now() - t0;
+}
+async function frameLoop() {
+  if (loopBusy) return; loopBusy = true;
+  while (true) {
+    if (!S.live || document.hidden || !S.status?.ok) { await sleep(400); continue; }
+    // Stream first; after 3 failures in a row, screencap and retry the stream every 30s.
+    if (streamFails < 3 || Date.now() - lastStreamTry > 30000) {
+      lastStreamTry = Date.now();
+      try { await playStream(); } catch (e) {
+        if (e.name !== 'AbortError') {
+          streamFails++; console.warn('stream:', e.message);
+          if (streamFails === 3) toast('Live stream unavailable, using screenshots: ' + e.message, true);
+        }
+      }
+      streamAbort = null;
+      await sleep(500);
+      continue;
+    }
+    try { await pngFrame(); } catch { await sleep(1000); }
+  }
+}
+$('#btnLive').onclick = () => {
+  S.live = !S.live;
+  $('#btnLive').innerHTML = S.live ? `${ic('pause', 'i')}<span class="lbl">Pause</span>` : `${ic('play', 'i')}<span class="lbl">Live</span>`;
+  if (!S.live) { stopStream(); $('#fps').textContent = 'paused'; }
+  renderEmpty();
+};
+
+// Where the picture sits on screen, and how its pixels map to real phone pixels
+// (the stream is downscaled; screencaps are full size).
+function view() {
+  const el = viewMode === 'video' ? canvas : $('#frame'), box = el.getBoundingClientRect();
+  const nw = viewMode === 'video' ? canvas.width : el.naturalWidth, nh = viewMode === 'video' ? canvas.height : el.naturalHeight;
+  if (!nw || !nh) return null;
+  const real = S.status?.screen, k = real ? Math.max(real.w, real.h) / Math.max(nw, nh) : 1;
+  const scale = Math.min(box.width / nw, box.height / nh);
+  const dw = nw * scale, dh = nh * scale;
+  return { box, pw: nw * k, ph: nh * k, dw, dh, ox: (box.width - dw) / 2, oy: (box.height - dh) / 2 };
+}
+function toPhone(ev) {
+  const v = view(); if (!v) return null;
+  const fx = (ev.clientX - v.box.left - v.ox) / v.dw, fy = (ev.clientY - v.box.top - v.oy) / v.dh;
+  if (fx < 0 || fy < 0 || fx > 1 || fy > 1) return null;
+  return { x: fx * v.pw, y: fy * v.ph, cx: ev.clientX - v.box.left, cy: ev.clientY - v.box.top };
+}
+function ripple(p) { const d = document.createElement('div'); d.className = 'ripple'; d.style.left = p.cx + 'px'; d.style.top = p.cy + 'px'; $('#overlay').appendChild(d); setTimeout(() => d.remove(), 600); }
+
+const screen = $('#screen');
+const live = () => S.status?.ok;
+// Input goes out one request at a time so events reach the phone in order.
+// Moves are coalesced: while one is in flight, only the newest waits.
+let inq = Promise.resolve(), pendingMove = null, moveBusy = false;
+function send(action, body) { inq = inq.then(() => api(action, body)).catch(() => {}); return inq; }
+function sendMove(body) {
+  pendingMove = body;
+  if (moveBusy) return;
+  moveBusy = true;
+  (async () => { while (pendingMove) { const b = pendingMove; pendingMove = null; await send('touch', b); } moveBusy = false; })();
+}
+// Live control = the scrcpy stream's own input channel (instant). Otherwise adb input (slow).
+const liveTouch = () => viewMode === 'video' && S.status?.stream?.control;
+function toVideo(ev, clamp) {
+  const v = view(); if (!v) return null;
+  let fx = (ev.clientX - v.box.left - v.ox) / v.dw, fy = (ev.clientY - v.box.top - v.oy) / v.dh;
+  if (clamp) { fx = Math.max(0, Math.min(1, fx)); fy = Math.max(0, Math.min(1, fy)); } else if (fx < 0 || fy < 0 || fx > 1 || fy > 1) return null;
+  return { x: Math.round(fx * canvas.width), y: Math.round(fy * canvas.height), w: canvas.width, h: canvas.height };
+}
+
+let down = null;
+screen.addEventListener('pointerdown', (ev) => {
+  if (ev.button !== 0 || !live() || ev.target.closest('.connect-card')) return;
+  const p = toPhone(ev); if (!p) return;
+  screen.focus(); screen.setPointerCapture(ev.pointerId);
+  down = { p, t: performance.now(), live: liveTouch(), pinch: ev.ctrlKey && liveTouch() };
+  if (down.live) { const v = toVideo(ev, true); send('touch', { a: 0, ...v }); if (down.pinch) send('touch', { a: 0, pid: 'v', ...mirror(v) }); ripple(p); }
+});
+screen.addEventListener('pointermove', (ev) => {
+  if (!down?.live) return;
+  const v = toVideo(ev, true);
+  if (down.pinch) { send('touch', { a: 2, ...v }); send('touch', { a: 2, pid: 'v', ...mirror(v) }); return; }
+  sendMove({ a: 2, ...v });
+});
+const mirror = (v) => ({ ...v, x: v.w - v.x, y: v.h - v.y });
+function release(ev) {
+  if (!down) return;
+  if (down.live) {
+    pendingMove = null;
+    const v = toVideo(ev, true);
+    send('touch', { a: 1, ...v }); if (down.pinch) send('touch', { a: 1, pid: 'v', ...mirror(v) });
+    down = null; return;
+  }
+  const p = toPhone(ev) || down.p; const dt = performance.now() - down.t;
+  const dist = Math.hypot(p.x - down.p.x, p.y - down.p.y);
+  if (dist > 25) api('swipe', { x1: down.p.x, y1: down.p.y, x2: p.x, y2: p.y, ms: Math.min(1200, Math.max(120, dt)) });
+  else if (dt > 500) { api('longpress', down.p); ripple(down.p); }
+  else { api('tap', down.p); ripple(down.p); }
+  down = null;
+}
+screen.addEventListener('pointerup', release);
+screen.addEventListener('pointercancel', release);
+screen.addEventListener('contextmenu', (ev) => { ev.preventDefault(); if (live()) send('key', { key: 'back' }); });
+let wheelAt = 0;
+screen.addEventListener('wheel', (ev) => {
+  if (!live()) return;
+  ev.preventDefault();
+  if (liveTouch()) {
+    const v = toVideo(ev); if (!v) return;
+    const notches = ev.deltaMode === 1 ? ev.deltaY / 3 : ev.deltaY / 100;
+    send('scroll', { ...v, v: Math.max(-16, Math.min(16, -notches)), h: 0 });
+    return;
+  }
+  if (performance.now() - wheelAt < 350) return; wheelAt = performance.now();
+  const p = toPhone(ev); if (!p) return;
+  const h = view()?.ph || 2340, d = Math.sign(ev.deltaY) * h * 0.28;
+  api('swipe', { x1: p.x, y1: p.y, x2: p.x, y2: Math.max(10, Math.min(h - 10, p.y - d)), ms: 220 });
+}, { passive: false });
+
+// keyboard → phone, while the screen has focus
+let buf = '', bufT;
+function flushText() { if (buf) { send('text', { text: buf }); buf = ''; } }
+screen.addEventListener('keydown', (ev) => {
+  if (!live() || ev.target !== screen) return;
+  const map = { Backspace: 'delete', Enter: 'enter', Escape: 'back', Tab: 'tab', ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', Delete: 'forwarddel', Home: 'home' };
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  if (map[ev.key]) { ev.preventDefault(); flushText(); send('key', { key: map[ev.key] }); return; }
+  if (ev.key.length === 1) { ev.preventDefault(); buf += ev.key; clearTimeout(bufT); bufT = setTimeout(flushText, liveTouch() ? 30 : 250); }
+});
+
+function needPhone() { if (!live()) { toast('Phone not connected', true); return true; } return false; }
+$$('[data-key]').forEach((b) => b.onclick = () => { if (!needPhone()) send('key', { key: b.dataset.key }); });
+$$('[data-act]').forEach((b) => b.onclick = () => { if (b.dataset.act === 'openshots' || !needPhone()) run(b.dataset.act); });
+
+// ------------------------------------------------ apps
+const PALETTE = [['#ff8a7a', '#d6402f'], ['#ffb36b', '#e0701a'], ['#f2d36b', '#c79a00'], ['#7fdca0', '#2f9e5b'], ['#6fd6cf', '#15918a'], ['#7ab8ff', '#1f5fd6'], ['#a59bff', '#4b2fd6'], ['#d69bff', '#8a2fd6'], ['#ff9bc8', '#d62f7e'], ['#8a8780', '#3a3833']];
+// Real launcher icon over the letter tile; the tile stays if there is no icon.
+function logo(key, name, src, fallback = '') {
+  return `<div class="ico" style="background:${color(key)}"><span>${esc(name[0] || '?')}</span><img src="${esc(src)}" alt="" loading="lazy" data-fb="${esc(fallback)}" onload="this.parentNode.classList.add('has')" onerror="if(this.dataset.fb){this.src=this.dataset.fb;this.dataset.fb=''}else this.remove()"></div>`;
+}
+function color(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; const [a, b] = PALETTE[h % PALETTE.length]; return `linear-gradient(160deg, ${a}, ${b})`; }
+function nameOf(pkg) { return S.apps.find((a) => a.pkg === pkg)?.name || pkg || '—'; }
+async function loadApps(refresh) {
+  const r = await api('apps', refresh ? { refresh: 1 } : null, 'GET');
+  if (!r.ok) { S.apps = []; S.recents = []; renderApps(); return; }
+  S.apps = r.apps; S.recents = r.recents; S.favorites = r.favorites;
+  renderApps();
+}
+function appRow(a) {
+  const fav = S.favorites.includes(a.pkg);
+  return `<div class="appi" data-pkg="${esc(a.pkg)}" title="Click to open · right-click for more">
+    ${logo(a.pkg, a.name, '/icon/' + encodeURIComponent(a.pkg))}
+    <div class="meta"><div class="nm">${fav ? `<span class="star">${ic('starf')}</span> ` : ''}${esc(a.name)}</div><div class="pk">${esc(a.pkg)}</div></div>
+    <div class="acts"><button class="ghost" data-a="fav" title="${fav ? 'Unpin' : 'Pin to top'}">${ic(fav ? 'starf' : 'star')}</button><button class="ghost" data-a="stop" title="Force stop">${ic('stop')}</button></div>
+  </div>`;
+}
+function renderApps() {
+  const q = $('#appSearch').value.trim().toLowerCase();
+  let list = S.apps.filter((a) => S.filter === 'all' || a.user || S.favorites.includes(a.pkg));
+  if (q) list = list.filter((a) => (a.name + ' ' + a.pkg).toLowerCase().includes(q));
+  const byPkg = Object.fromEntries(S.apps.map((a) => [a.pkg, a]));
+  let html = '';
+  if (!q && S.apps.length) {
+    const favs = S.favorites.map((p) => byPkg[p]).filter(Boolean);
+    if (favs.length) html += '<div class="group-title eyebrow">Pinned</div>' + favs.map(appRow).join('');
+    const rec = S.recents.map((p) => byPkg[p]).filter((a) => a && !S.favorites.includes(a.pkg)).slice(0, 6);
+    if (rec.length) html += '<div class="group-title eyebrow">Recent</div>' + rec.map(appRow).join('');
+    html += `<div class="group-title eyebrow">${S.filter === 'all' ? 'All apps' : 'My apps'} · ${list.length}</div>`;
+  }
+  html += list.map(appRow).join('') || `<div class="muted">${S.status?.ok ? 'No apps match.' : 'Connect the phone to see its apps.'}</div>`;
+  $('#appList').innerHTML = html;
+  highlightForeground();
+}
+function highlightForeground() { $$('.appi').forEach((el) => el.classList.toggle('fg', el.dataset.pkg === S.status?.foreground)); }
+$('#appSearch').oninput = renderApps;
+$('#appSearch').onkeydown = (e) => { if (e.key === 'Enter') { const f = $('.appi'); if (f) launch(f.dataset.pkg); } };
+$$('#appFilter button').forEach((b) => b.onclick = () => { $$('#appFilter button').forEach((x) => x.classList.toggle('on', x === b)); S.filter = b.dataset.f; renderApps(); });
+async function launch(pkg) { if (needPhone()) return; toast('Opening ' + nameOf(pkg) + '…'); await run('launch', { pkg }); setTimeout(refreshStatus, 800); }
+async function toggleFav(pkg) { const r = await api('favorite', { pkg, on: !S.favorites.includes(pkg) }); if (r.ok) { S.favorites = r.favorites; renderApps(); } }
+$('#appList').addEventListener('click', (e) => {
+  const row = e.target.closest('.appi'); if (!row) return;
+  const a = e.target.closest('[data-a]')?.dataset.a, pkg = row.dataset.pkg;
+  if (a === 'fav') return toggleFav(pkg);
+  if (a === 'stop') return run('stop', { pkg });
+  launch(pkg);
+});
+$('#appList').addEventListener('contextmenu', (e) => {
+  const row = e.target.closest('.appi'); if (!row) return; e.preventDefault();
+  const pkg = row.dataset.pkg, fav = S.favorites.includes(pkg);
+  closeMenu();
+  const m = document.createElement('div'); m.className = 'menu'; m.id = 'menu';
+  m.innerHTML = `<button data-m="open">Open</button><button data-m="fav">${fav ? 'Unpin' : 'Pin to top'}</button><button data-m="stop">Force stop</button><button data-m="restart">Restart</button><button data-m="grant">Grant all permissions</button><button data-m="logs">Show its logs</button><button data-m="info">App info (on phone)</button><button data-m="rename">Rename…</button><button data-m="clear" class="danger">Clear data…</button><button data-m="uninstall" class="danger">Uninstall…</button>`;
+  m.style.left = Math.min(e.clientX, innerWidth - 200) + 'px'; m.style.top = Math.min(e.clientY, innerHeight - 380) + 'px';
+  m.onclick = async (ev) => {
+    const k = ev.target.closest('[data-m]')?.dataset.m; closeMenu();
+    if (k === 'open') launch(pkg);
+    if (k === 'fav') toggleFav(pkg);
+    if (k === 'stop') run('stop', { pkg });
+    if (k === 'restart') run('restart', { pkg });
+    if (k === 'grant') run('grantall', { pkg });
+    if (k === 'clear' && confirm(`Wipe all data for ${nameOf(pkg)} (${pkg})? Logins, settings and files in the app are deleted — like a fresh install.`)) run('cleardata', { pkg });
+    if (k === 'info') run('appinfo', { pkg });
+    if (k === 'logs') { showTab('logs'); S.logPkg = pkg; setLogMode('app'); loadLogs(); }
+    if (k === 'rename') { const n = prompt('Name for ' + pkg, nameOf(pkg)); if (n !== null) { await api('rename', { pkg, name: n }); loadApps(true); } }
+    if (k === 'uninstall' && confirm(`Uninstall ${nameOf(pkg)} (${pkg}) from the phone?`)) { await run('uninstall', { pkg }); loadApps(true); }
+  };
+  document.body.appendChild(m);
+});
+function closeMenu() { $('#menu')?.remove(); }
+document.addEventListener('click', (e) => { if (!e.target.closest('#menu')) closeMenu(); });
+
+// ------------------------------------------------ side tabs
+function showTab(t) { $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.t === t)); $$('.pane').forEach((p) => p.classList.toggle('on', p.id === 'p-' + t)); if (t === 'activity') loadActivity(); }
+$$('#tabs button').forEach((b) => b.onclick = () => showTab(b.dataset.t));
+
+// inspect
+async function inspect() {
+  if (needPhone()) return;
+  $('#btnInspect span').textContent = 'Reading…';
+  const r = await api('ui', null, 'GET');
+  $('#btnInspect span').textContent = 'Read screen';
+  if (!r.ok) return toast(r.error, true);
+  S.nodes = r.nodes; renderNodes();
+}
+function renderNodes() {
+  const q = $('#nodeFilter').value.toLowerCase();
+  const list = S.nodes.filter((n) => !q || [n.label, n.id, n.cls].join(' ').toLowerCase().includes(q));
+  $('#nodes').innerHTML = list.map((n) => `<div class="node" data-i="${S.nodes.indexOf(n)}"><span class="lbl">${esc(n.label || (n.id ? '#' + n.id : n.cls))}</span>${n.clickable ? '<span class="tag">tap</span>' : ''}${n.scrollable ? '<span class="tag s">scroll</span>' : ''}<span class="cls">${esc(n.cls)}</span></div>`).join('') || '<div class="muted">Nothing.</div>';
+}
+function showHl(n) {
+  const v = view(); if (!v) return;
+  const scale = v.dw / v.pw, ox = v.ox, oy = v.oy;
+  const [x1, y1, x2, y2] = n.bounds;
+  let hl = $('#hl'); if (!hl) { hl = document.createElement('div'); hl.id = 'hl'; hl.className = 'hl'; $('#overlay').appendChild(hl); }
+  Object.assign(hl.style, { left: ox + x1 * scale + 'px', top: oy + y1 * scale + 'px', width: (x2 - x1) * scale + 'px', height: (y2 - y1) * scale + 'px', display: 'block' });
+}
+$('#btnInspect').onclick = inspect;
+$('#nodeFilter').oninput = renderNodes;
+$('#nodes').addEventListener('mouseover', (e) => { const el = e.target.closest('.node'); if (el) showHl(S.nodes[el.dataset.i]); });
+$('#nodes').addEventListener('mouseleave', () => { const h = $('#hl'); if (h) h.style.display = 'none'; });
+$('#nodes').addEventListener('click', async (e) => { const el = e.target.closest('.node'); if (!el) return; const n = S.nodes[el.dataset.i]; await api('tap', { x: n.x, y: n.y }); toast('Tapped ' + (n.label || n.id || n.cls)); setTimeout(inspect, 900); });
+
+// logs
+function setLogMode(m) { S.logMode = m; $$('#logMode button').forEach((b) => b.classList.toggle('on', b.dataset.m === m)); }
+$$('#logMode button').forEach((b) => b.onclick = () => { S.logPkg = null; setLogMode(b.dataset.m); loadLogs(); });
+async function loadLogs(quiet) {
+  if (!live()) { $('#logs').textContent = 'Connect the phone to read its logs.'; return; }
+  const pkg = S.logPkg || S.status?.foreground;
+  const q = S.logMode === 'crash' ? { crash: 1 } : S.logMode === 'app' && pkg ? { pkg } : {};
+  if (quiet !== true) $('#logs').textContent = 'Loading…';
+  const r = await api('logs', q, 'GET');
+  if (!r.ok) return $('#logs').textContent = r.error;
+  $('#logs').innerHTML = (S.logMode === 'app' && pkg ? `<span style="color:var(--ink-4)"># ${esc(nameOf(pkg))} (${esc(pkg)})</span>\n` : '') +
+    (r.lines.map((l) => `<span class="${/\bE\/|FATAL|Exception/.test(l) ? 'E' : /\bW\//.test(l) ? 'W' : ''}">${esc(l)}</span>`).join('\n') || 'No warnings or errors.');
+  if (quiet === true) { const sc = $('#logs').parentNode; sc.scrollTop = sc.scrollHeight; }
+}
+$('#btnLogs').onclick = () => loadLogs();
+
+// activity
+async function loadActivity() {
+  const r = await api('activity', null, 'GET');
+  $('#activity').innerHTML = (r.items || []).map((a) => `<div class="act"><span class="src ${esc(a.source)}">${esc(a.source)}</span><div><b>${esc(a.action)}</b> <span style="color:var(--ink-3)">${esc(a.detail)}</span></div><time>${new Date(a.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time></div>`).join('') || '<div class="muted">Nothing yet. Agent commands (phonectl tap, launch, install…) show up here.</div>';
+}
+
+// tools
+$('#btnTxt').onclick = () => { if (needPhone()) return; run('text', { text: $('#txt').value }, 'Typed'); $('#txt').value = ''; };
+$('#txt').onkeydown = (e) => { if (e.key === 'Enter') $('#btnTxt').click(); };
+$('#btnUrl').onclick = () => { if (!needPhone()) run('open', { url: $('#url').value.trim() }); };
+$('#url').onkeydown = (e) => { if (e.key === 'Enter') $('#btnUrl').click(); };
+$('#btnRev').onclick = () => { if (!needPhone()) run('reverse', { port: $('#port').value }); };
+$('#code').onkeydown = (e) => { if (e.key === 'Enter') $('#btnPair').click(); };
+async function uploadApk(file) {
+  if (!file) return;
+  if (needPhone()) return;
+  if (!/\.apk$/i.test(file.name)) {
+    toast('Sending ' + file.name + '…');
+    const r = await fetch('/api/upload-file?name=' + encodeURIComponent(file.name), { method: 'POST', body: file }).then((x) => x.json()).catch(() => ({ ok: false, error: 'upload failed' }));
+    return r.ok ? toast(r.message) : toast(r.error, true);
+  }
+  toast('Installing ' + file.name + '…');
+  const r = await fetch('/api/upload-apk?name=' + encodeURIComponent(file.name), { method: 'POST', body: file }).then((x) => x.json()).catch(() => ({ ok: false, error: 'upload failed' }));
+  r.ok ? toast(r.message) : toast(r.error, true);
+  if (r.ok) loadApps(true);
+}
+const drop = $('#drop');
+$('#pick').onclick = () => $('#apk').click();
+$('#apk').onchange = () => uploadApk($('#apk').files[0]);
+['dragover', 'dragenter'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', (e) => uploadApk(e.dataTransfer.files[0]));
+
+// ------------------------------------------------ harness extras
+// Record · keep awake · copy screen · crash alerts · follow logs · clipboard · drop files
+let recTimer = null, lastCrashT;
+function extrasFromStatus(s) {
+  const rec = s.ok && s.recording;
+  const b = $('#btnRec');
+  b.classList.toggle('rec-on', Boolean(rec));
+  clearInterval(recTimer);
+  const label = () => { const t = Math.round((Date.now() - rec.since) / 1000); b.querySelector('.lbl').textContent = `Stop ${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
+  if (rec) { label(); recTimer = setInterval(label, 1000); } else b.querySelector('.lbl').textContent = 'Record';
+  $('#btnAwake').classList.toggle('on', Boolean(s.keepAwake));
+  $('#btnAwake').title = s.keepAwake ? 'Keeping the screen on — click to restore the normal timeout' : 'Keep the screen on while testing';
+  // A crash while you test: say so, and point at the stack trace.
+  const c = s.crash?.last;
+  if (c && lastCrashT !== undefined && c.t !== lastCrashT) {
+    toastLink(`${nameOf(c.pkg) || 'An app'} crashed${c.title ? ': ' + c.title : ''} — click for the trace`, () => { showTab('logs'); S.logPkg = null; setLogMode('crash'); loadLogs(); });
+    S.newCrashes = (S.newCrashes || 0) + 1;
+  }
+  if (s.crash) lastCrashT = c ? c.t : null;
+  const logsTab = $('#tabs [data-t="logs"]');
+  logsTab.innerHTML = 'Logs' + (S.newCrashes ? `<span class="badge">${S.newCrashes}</span>` : '');
+}
+function toastLink(msg, fn) {
+  toast(msg, true);
+  const t = $('#toast'); t.classList.add('link');
+  t.onclick = () => { t.classList.remove('link'); t.onclick = null; t.className = 'toast'; fn(); };
+  clearTimeout(toastLink.h); toastLink.h = setTimeout(() => { t.classList.remove('link'); t.onclick = null; }, 9000);
+}
+$('#tabs [data-t="logs"]').addEventListener('click', () => { S.newCrashes = 0; });
+
+$('#btnRec').onclick = async () => {
+  if (needPhone()) return;
+  const on = !S.status?.recording;
+  if (!on) toast('Saving recording…');
+  const r = await run('record', { on });
+  if (!on && r.ok) toastLink(r.message + ' — click to open the folder', () => run('openshots'));
+  refreshStatus();
+};
+$('#btnAwake').onclick = async () => { if (needPhone()) return; await run('keepawake', { on: !S.status?.keepAwake }); refreshStatus(); };
+$('#btnCopyShot').onclick = async () => {
+  if (needPhone()) return;
+  try {
+    let blob;
+    if (viewMode === 'video') blob = await new Promise((r) => canvas.toBlob(r, 'image/png'));
+    else blob = await (await fetch('/frame.png?t=' + Date.now())).blob();
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    toast('Screen copied — paste it anywhere');
+  } catch (e) { toast('Could not copy: ' + e.message, true); }
+};
+
+// Logs: follow mode refreshes quietly every 2s and stays scrolled to the bottom.
+let followT = null;
+$('#btnFollow').onclick = () => {
+  const on = !followT;
+  $('#btnFollow').classList.toggle('primary', on);
+  $('#btnFollow').innerHTML = `<svg class="i sm"><use href="#i-${on ? 'pause' : 'play'}"/></svg>`;
+  clearInterval(followT); followT = null;
+  if (on) { loadLogs(true); followT = setInterval(() => { if ($('#p-logs').classList.contains('on')) loadLogs(true); }, 2000); }
+};
+
+// Clipboard: Ctrl+V sends the PC clipboard and pastes it (any language / emoji, unlike typing).
+// Ctrl+C copies the phone's selection back to the PC.
+document.addEventListener('paste', (ev) => {
+  if (document.activeElement !== screen || !live()) return;
+  const text = ev.clipboardData?.getData('text');
+  if (!text) return;
+  ev.preventDefault();
+  send('setclip', { text, paste: true }).then(() => toast('Pasted on the phone'));
+});
+screen.addEventListener('keydown', async (ev) => {
+  if (!live() || !(ev.ctrlKey || ev.metaKey) || ev.key.toLowerCase() !== 'c') return;
+  ev.preventDefault();
+  const r = await api('phoneclip', { copy: true });
+  if (!r.ok) return toast(r.error, true);
+  try { await navigator.clipboard.writeText(r.text); toast(r.text ? 'Copied from the phone' : 'Phone clipboard is empty'); } catch (e) { toast('Could not write the PC clipboard: ' + e.message, true); }
+});
+
+// Drop files straight onto the phone.
+const wrap = $('.phone-wrap');
+['dragover', 'dragenter'].forEach((t) => wrap.addEventListener(t, (e) => { if (e.dataTransfer?.types?.includes('Files')) { e.preventDefault(); wrap.classList.add('dropping'); } }));
+['dragleave', 'drop'].forEach((t) => wrap.addEventListener(t, (e) => { e.preventDefault(); wrap.classList.remove('dropping'); }));
+wrap.addEventListener('drop', async (e) => { for (const f of e.dataTransfer?.files || []) await uploadApk(f); });
+
+// ------------------------------------------------ projects
+S.projects = [];
+$$('#sideTabs button').forEach((b) => b.onclick = () => { $$('#sideTabs button').forEach((x) => x.classList.toggle('on', x === b)); $$('.spane').forEach((p) => p.classList.toggle('on', p.id === 's-' + b.dataset.s)); });
+function ago(t) { if (!t) return 'never'; const s = (Date.now() - t) / 1000; if (s < 90) return 'just now'; if (s < 3600) return Math.round(s / 60) + 'm ago'; if (s < 86400) return Math.round(s / 3600) + 'h ago'; if (s < 86400 * 14) return Math.round(s / 86400) + 'd ago'; return Math.round(s / 604800) + 'w ago'; }
+async function loadProjects(refresh) {
+  const r = await api('projects', refresh ? { refresh: 1 } : null, 'GET');
+  if (!r.ok) { $('#projCount').textContent = 'Could not scan'; return; }
+  S.projects = r.projects; renderProjects();
+}
+function projCard(p) {
+  const running = p.job?.state === 'running', failed = p.job?.state === 'failed';
+  const fg = p.pkg && p.pkg === S.status?.foreground;
+  const chips = ['<span class="chip type">' + esc(p.type) + '</span>'];
+  if (running) chips.push('<span class="chip run">building</span>');
+  else if (failed) chips.push('<span class="chip bad">build failed</span>');
+  if (p.installed) chips.push('<span class="chip ok">on phone</span>');
+  if (p.apkAt) chips.push('<span class="chip">apk ' + ago(p.apkAt) + '</span>');
+  chips.push('<span class="chip">edited ' + ago(p.editedAt) + '</span>');
+  const acts = [];
+  if (p.installed) acts.push(`<button class="primary" data-pa="open" title="Open on the phone">${ic('play')}Open</button>`);
+  if (p.gradleDir) acts.push(`<button ${p.installed ? '' : 'class="primary" '}data-pa="buildrun" title="gradlew assembleDebug → install → open"${running ? ' disabled' : ''}>${ic('hammer')}${running ? 'Building…' : 'Build & run'}</button>`);
+  if (p.apkAt) acts.push(`<button data-pa="install" title="Install the last built APK and open it">${ic('download')}Install</button>`);
+  if (/Expo|React Native|Flutter/.test(p.type)) acts.push(`<button data-pa="dev" title="Start the dev server (hot reload)">${ic('bolt')}Dev server</button>`);
+  const side = '<div class="mini">' + (p.pkg ? `<button class="ghost" data-pa="logs" title="Logs for this app">${ic('logs')}</button>` : '') + `<button class="ghost" data-pa="code" title="Open in VS Code">${ic('code')}</button><button class="ghost" data-pa="folder" title="Open folder">${ic('folder')}</button></div>`;
+  const tail = (running || failed) && p.job?.tail?.length ? '<div class="proj-tail">' + esc(p.job.tail.slice(-5).join('\n')) + '</div>' : '';
+  return '<div class="proj' + (fg ? ' fg' : '') + '" data-id="' + esc(p.id) + '">' +
+    '<div class="proj-top">' + logo(p.pkg || p.name, p.name, p.installed && p.pkg ? '/icon/' + encodeURIComponent(p.pkg) : '/projicon/' + encodeURIComponent(p.id), p.installed ? '/projicon/' + encodeURIComponent(p.id) : '') +
+    '<div style="min-width:0;flex:1"><div class="nm">' + esc(p.name) + '</div><div class="sub" title="' + esc(p.dir) + '">' + esc(p.dir) + '</div></div>' + side + '</div>' +
+    '<div class="chips">' + chips.join('') + '</div><div class="proj-acts">' + acts.join('') + '</div>' + tail + '</div>';
+}
+function renderProjects() {
+  const q = $('#projSearch').value.trim().toLowerCase();
+  const list = S.projects.filter((p) => !q || (p.name + p.dir + p.pkg + p.type).toLowerCase().includes(q));
+  $('#projCount').textContent = S.projects.length + ' mobile projects';
+  $('#projList').innerHTML = list.map(projCard).join('') || '<div class="muted">No projects match.</div>';
+}
+$('#projSearch').oninput = renderProjects;
+$('#projRescan').onclick = () => { $('#projCount').textContent = 'Scanning…'; loadProjects(true); };
+$('#projList').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-pa]'); if (!b) return;
+  const p = S.projects.find((x) => x.id === b.closest('.proj').dataset.id); if (!p) return;
+  const a = b.dataset.pa;
+  if (a === 'open') launch(p.pkg);
+  if (a === 'buildrun') { if (!S.status?.ok) toast('Phone not connected — building only', true); await run('projbuild', { id: p.id, run: 1 }); loadProjects(); }
+  if (a === 'install') { if (needPhone()) return; toast('Installing ' + p.name + '…'); await run('projinstall', { id: p.id }); loadProjects(); loadApps(true); }
+  if (a === 'dev') run('projdev', { id: p.id });
+  if (a === 'code') run('projcode', { id: p.id });
+  if (a === 'folder') run('projfolder', { id: p.id });
+  if (a === 'logs') { showTab('logs'); S.logPkg = p.pkg; setLogMode('app'); loadLogs(); }
+});
+setInterval(() => { if (S.projects.some((p) => p.job?.state === 'running')) loadProjects(); }, 2500);
+setInterval(() => loadProjects(), 20000);
+
+// ------------------------------------------------ boot
+loadProjects();
+refreshStatus().then(() => loadApps());
+setInterval(refreshStatus, 3000);
+setInterval(() => { if ($('#p-activity').classList.contains('on')) loadActivity(); }, 3000);
+frameLoop();
+</script>
+</body>
+</html>

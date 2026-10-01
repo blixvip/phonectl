@@ -1,0 +1,42 @@
+{
+  "name": "phonectl",
+  "version": "1.0.0",
+  "description": "Control your real Android phone from your computer: live browser dashboard, CLI, and an agent-friendly build → screenshot → verify loop. Wireless, over adb + scrcpy.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blixvip/phonectl.git"
+  },
+  "homepage": "https://github.com/blixvip/phonectl#readme",
+  "keywords": [
+    "android",
+    "adb",
+    "scrcpy",
+    "phone",
+    "mirror",
+    "remote-control",
+    "ai-agent",
+    "claude-code",
+    "expo",
+    "react-native"
+  ],
+  "type": "module",
+  "bin": {
+    "phonectl": "src/cli.mjs"
+  },
+  "files": [
+    "src",
+    "tools/icondump",
+    "README.md",
+    "AGENTS.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "check": "node -e \"for (const f of require('fs').readdirSync('src')) if (f.endsWith('.mjs')) require('child_process').execFileSync(process.execPath, ['--check', 'src/' + f], { stdio: 'inherit' })\"",
+    "test": "node test/stream.test.mjs",
+    "dash": "node src/cli.mjs dash"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
