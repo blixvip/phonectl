@@ -141,6 +141,12 @@ Run `phonectl doctor`. The usual answers:
 
 💬 [Join the Discord](https://discord.gg/zEB4VjmfSb) for questions, help, feedback, and updates.
 
+## Contributors
+
+Thanks to everyone who has helped make phonectl better! Want to join them? Read [CONTRIBUTING.md](CONTRIBUTING.md) and pick one of the [good first issues](https://github.com/blixvip/phonectl/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+
+<a href="https://github.com/blixvip/phonectl/graphs/contributors"><img src="https://contrib.rocks/image?repo=blixvip/phonectl" alt="Contributors" /></a>
+
 ## License
 
 MIT
